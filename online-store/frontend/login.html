@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — KHARAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+    .grid-bg {
+      background-image: linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .input-field {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      border-radius: 2px;
+      padding: 0.65rem 1rem;
+      width: 100%;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .input-field:focus { border-color: #f59e0b; }
+    .input-field::placeholder { color: #64748b; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+    .shake { animation: shake 0.3s ease; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center grid-bg">
+
+  <div class="w-full max-w-md px-4 py-12">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <a href="index.html" class="inline-flex items-center gap-2 text-amber-400 font-bold text-2xl tracking-wider">
+        <i data-lucide="settings" class="w-7 h-7"></i>
+        <span>KHARAT</span>
+      </a>
+      <p class="text-slate-500 text-sm mt-2 font-medium">Precision Engineering Workshop</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-slate-800 border border-slate-700 rounded-sm p-8">
+      <div class="mb-6">
+        <h1 class="text-xl font-bold text-slate-100">Sign in to your account</h1>
+        <p class="text-slate-500 text-sm mt-1">Welcome back. Enter your credentials below.</p>
+      </div>
+
+      <!-- Error banner -->
+      <div id="error-banner" class="hidden mb-4 flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-sm">
+        <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+        <span id="error-text"></span>
+      </div>
+
+      <form id="login-form" novalidate>
+        <!-- Email -->
+        <div class="mb-4">
+          <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5" for="email">Email</label>
+          <input id="email" type="email" name="email" autocomplete="email" placeholder="you@example.com" class="input-field" required />
+          <div id="email-error" class="text-red-400 text-xs mt-1 hidden"></div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider" for="password">Password</label>
+          </div>
+          <div class="relative">
+            <input id="password" type="password" name="password" autocomplete="current-password" placeholder="••••••••" class="input-field pr-10" required />
+            <button type="button" id="toggle-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400 transition-colors">
+              <i data-lucide="eye" class="w-4 h-4" id="pw-eye-icon"></i>
+            </button>
+          </div>
+          <div id="password-error" class="text-red-400 text-xs mt-1 hidden"></div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" id="submit-btn"
+          class="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-sm transition-colors text-sm">
+          <span id="btn-text">Sign In</span>
+          <i data-lucide="log-in" class="w-4 h-4" id="btn-icon"></i>
+          <svg id="btn-spinner" class="hidden animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+        </button>
+      </form>
+
+      <div class="mt-6 text-center text-sm text-slate-500">
+        Don't have an account?
+        <a href="signup.html" class="text-amber-400 hover:text-amber-300 font-semibold ml-1 transition-colors">Create one</a>
+      </div>
+    </div>
+
+    <div class="text-center mt-6">
+      <a href="index.html" class="inline-flex items-center gap-1 text-slate-500 hover:text-amber-400 text-sm transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to store
+      </a>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  // Redirect if already logged in
+  if (getToken()) {
+    var params = new URLSearchParams(window.location.search);
+    window.location.href = params.get("redirect") === "checkout" ? "checkout.html" : "index.html";
+  }
+
+  lucide.createIcons();
+
+  // Toggle password visibility
+  var pwVisible = false;
+  document.getElementById("toggle-pw").addEventListener("click", function() {
+    pwVisible = !pwVisible;
+    var input = document.getElementById("password");
+    input.type = pwVisible ? "text" : "password";
+    document.getElementById("pw-eye-icon").setAttribute("data-lucide", pwVisible ? "eye-off" : "eye");
+    lucide.createIcons({ nodes: [document.getElementById("pw-eye-icon").parentElement] });
+  });
+
+  // Form submit
+  document.getElementById("login-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    var email = document.getElementById("email").value.trim();
+    var password = document.getElementById("password").value;
+
+    // Validation
+    var valid = true;
+    document.getElementById("email-error").classList.add("hidden");
+    document.getElementById("password-error").classList.add("hidden");
+    document.getElementById("error-banner").classList.add("hidden");
+
+    if (!email) {
+      document.getElementById("email-error").textContent = "Email is required";
+      document.getElementById("email-error").classList.remove("hidden");
+      valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById("email-error").textContent = "Enter a valid email address";
+      document.getElementById("email-error").classList.remove("hidden");
+      valid = false;
+    }
+    if (!password) {
+      document.getElementById("password-error").textContent = "Password is required";
+      document.getElementById("password-error").classList.remove("hidden");
+      valid = false;
+    }
+
+    if (!valid) {
+      document.getElementById("login-form").classList.add("shake");
+      setTimeout(function(){ document.getElementById("login-form").classList.remove("shake"); }, 400);
+      return;
+    }
+
+    // Loading state
+    document.getElementById("submit-btn").disabled = true;
+    document.getElementById("btn-text").textContent = "Signing in…";
+    document.getElementById("btn-icon").classList.add("hidden");
+    document.getElementById("btn-spinner").classList.remove("hidden");
+
+    fetch(API_BASE + "/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: password })
+    })
+    .then(function(r) {
+      return r.json().then(function(data) { return { ok: r.ok, data: data }; });
+    })
+    .then(function(result) {
+      if (!result.ok) {
+        throw new Error(result.data.detail || result.data.message || "Invalid email or password");
+      }
+      var data = result.data;
+      var token = data.access_token || data.token;
+      var user = data.user || { email: email };
+      setAuth(token, user);
+      showToast("Welcome back, " + (user.full_name || user.email) + "!", "success");
+      setTimeout(function() {
+        var params = new URLSearchParams(window.location.search);
+        var redirect = params.get("redirect");
+        window.location.href = redirect === "checkout" ? "checkout.html" : "index.html";
+      }, 800);
+    })
+    .catch(function(err) {
+      document.getElementById("error-text").textContent = err.message || "Login failed. Please try again.";
+      document.getElementById("error-banner").classList.remove("hidden");
+      document.getElementById("submit-btn").disabled = false;
+      document.getElementById("btn-text").textContent = "Sign In";
+      document.getElementById("btn-icon").classList.remove("hidden");
+      document.getElementById("btn-spinner").classList.add("hidden");
+      lucide.createIcons();
+    });
+  });
+</script>
+</body>
+</html>
+

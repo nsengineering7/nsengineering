@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — KHARAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+    .skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius:2px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .sidebar-link { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 1rem; font-size:0.875rem; font-weight:500; color:#94a3b8; border-radius:2px; transition:all 0.15s; cursor:pointer; border:none; background:none; width:100%; text-align:left; }
+    .sidebar-link:hover { background:#1e293b; color:#fbbf24; }
+    .sidebar-link.active { background:#1e293b; color:#f59e0b; border-left:2px solid #f59e0b; }
+    .tab-section { display:none; }
+    .tab-section.active { display:block; }
+    .input-field { background:#1e293b; border:1px solid #334155; color:#f1f5f9; border-radius:2px; padding:0.6rem 1rem; width:100%; font-size:0.875rem; transition:border-color 0.2s; outline:none; }
+    .input-field:focus { border-color:#f59e0b; }
+    .input-field::placeholder { color:#64748b; }
+    select.input-field option { background:#1e293b; }
+    ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:#0f172a; } ::-webkit-scrollbar-thumb { background:#334155; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
+    .modal-box { background:#1e293b; border:1px solid #334155; border-radius:2px; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; }
+    .stat-card { background:#1e293b; border:1px solid #334155; padding:1.25rem; border-radius:2px; }
+    tbody tr:hover { background:rgba(30,41,59,0.6); }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+<!-- TOP BAR -->
+<header class="fixed top-0 left-0 right-0 z-50 h-14 bg-slate-900/95 backdrop-blur border-b border-slate-700/60 flex items-center px-4 gap-4">
+  <a href="index.html" class="flex items-center gap-2 text-amber-400 font-bold text-lg tracking-wider mr-4">
+    <i data-lucide="settings" class="w-5 h-5"></i><span>KHARAT</span>
+  </a>
+  <span class="text-slate-600 text-sm hidden sm:block">Admin Dashboard</span>
+  <div class="ml-auto flex items-center gap-4">
+    <a href="index.html" class="flex items-center gap-1.5 text-sm text-slate-400 hover:text-amber-400 transition-colors">
+      <i data-lucide="external-link" class="w-4 h-4"></i> <span class="hidden sm:inline">View Store</span>
+    </a>
+    <div class="w-px h-5 bg-slate-700"></div>
+    <button id="logout-btn" class="flex items-center gap-1.5 text-sm text-slate-400 hover:text-red-400 transition-colors">
+      <i data-lucide="log-out" class="w-4 h-4"></i> <span class="hidden sm:inline">Logout</span>
+    </button>
+  </div>
+</header>
+
+<div class="flex pt-14 min-h-screen">
+  <!-- SIDEBAR -->
+  <aside class="hidden md:flex flex-col w-52 bg-slate-900 border-r border-slate-800 fixed top-14 bottom-0 overflow-y-auto py-4 gap-1">
+    <button class="sidebar-link active" onclick="switchTab('dashboard')">
+      <i data-lucide="layout-dashboard" class="w-4 h-4 flex-shrink-0"></i> Dashboard
+    </button>
+    <button class="sidebar-link" onclick="switchTab('products')">
+      <i data-lucide="package" class="w-4 h-4 flex-shrink-0"></i> Products
+    </button>
+    <button class="sidebar-link" onclick="switchTab('orders')">
+      <i data-lucide="shopping-bag" class="w-4 h-4 flex-shrink-0"></i> Orders
+    </button>
+    <button class="sidebar-link" onclick="switchTab('settings')">
+      <i data-lucide="sliders" class="w-4 h-4 flex-shrink-0"></i> Settings
+    </button>
+    <button class="sidebar-link" onclick="switchTab('users')">
+      <i data-lucide="users" class="w-4 h-4 flex-shrink-0"></i> Users
+    </button>
+  </aside>
+
+  <!-- Mobile nav -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-800 flex">
+    <button class="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-xs text-slate-400 hover:text-amber-400 active-mobile" onclick="switchTab('dashboard')">
+      <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+    </button>
+    <button class="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-xs text-slate-400 hover:text-amber-400" onclick="switchTab('products')">
+      <i data-lucide="package" class="w-4 h-4"></i> Products
+    </button>
+    <button class="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-xs text-slate-400 hover:text-amber-400" onclick="switchTab('orders')">
+      <i data-lucide="shopping-bag" class="w-4 h-4"></i> Orders
+    </button>
+    <button class="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-xs text-slate-400 hover:text-amber-400" onclick="switchTab('settings')">
+      <i data-lucide="sliders" class="w-4 h-4"></i> Settings
+    </button>
+    <button class="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-xs text-slate-400 hover:text-amber-400" onclick="switchTab('users')">
+      <i data-lucide="users" class="w-4 h-4"></i> Users
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 md:ml-52 px-4 sm:px-6 py-6 pb-24 md:pb-6 min-h-screen">
+
+    <!-- ══════════════════ DASHBOARD ══════════════════ -->
+    <section id="tab-dashboard" class="tab-section active">
+      <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight">Dashboard Overview</h1>
+        <p class="text-slate-500 text-sm mt-0.5">Welcome back, <span id="admin-name" class="text-amber-400"></span></p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Products</span>
+            <i data-lucide="package" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <div id="stat-total-products" class="text-2xl font-extrabold text-slate-100">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">Total listed</div>
+        </div>
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Orders</span>
+            <i data-lucide="shopping-bag" class="w-4 h-4 text-blue-400"></i>
+          </div>
+          <div id="stat-total-orders" class="text-2xl font-extrabold text-slate-100">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Revenue</span>
+            <i data-lucide="trending-up" class="w-4 h-4 text-green-400"></i>
+          </div>
+          <div id="stat-revenue" class="text-2xl font-extrabold text-slate-100">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">Delivered orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Pending</span>
+            <i data-lucide="clock" class="w-4 h-4 text-yellow-400"></i>
+          </div>
+          <div id="stat-pending" class="text-2xl font-extrabold text-slate-100">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">Awaiting action</div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="bg-slate-800 border border-slate-700 rounded-sm overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-700">
+          <h2 class="font-bold text-slate-100 text-sm">Recent Orders</h2>
+          <button onclick="switchTab('orders')" class="text-xs text-amber-400 hover:text-amber-300 font-medium">View all →</button>
+        </div>
+        <div id="recent-orders-table" class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="text-left px-5 py-2.5 text-slate-500 font-semibold uppercase tracking-wider">Order</th>
+                <th class="text-left px-5 py-2.5 text-slate-500 font-semibold uppercase tracking-wider hidden sm:table-cell">Customer</th>
+                <th class="text-center px-5 py-2.5 text-slate-500 font-semibold uppercase tracking-wider">Status</th>
+                <th class="text-right px-5 py-2.5 text-slate-500 font-semibold uppercase tracking-wider">Total</th>
+              </tr>
+            </thead>
+            <tbody id="recent-orders-body">
+              <tr><td colspan="4" class="px-5 py-8 text-center text-slate-600"><div class="skeleton h-4 w-32 mx-auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ PRODUCTS ══════════════════ -->
+    <section id="tab-products" class="tab-section">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight">Products</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Manage your product catalog</p>
+        </div>
+        <button onclick="openProductModal(null)" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-sm text-sm transition-colors">
+          <i data-lucide="plus" class="w-4 h-4"></i> Add Product
+        </button>
+      </div>
+
+      <div class="bg-slate-800 border border-slate-700 rounded-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700 bg-slate-800/80">
+                <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Product</th>
+                <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider hidden md:table-cell">Category</th>
+                <th class="text-right px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Price</th>
+                <th class="text-center px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider hidden sm:table-cell">Stock</th>
+                <th class="text-center px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Active</th>
+                <th class="text-right px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody">
+              <tr><td colspan="6" class="px-4 py-8 text-center text-slate-600">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ ORDERS ══════════════════ -->
+    <section id="tab-orders" class="tab-section">
+      <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight">All Orders</h1>
+        <p class="text-slate-500 text-sm mt-0.5">Manage and update order statuses</p>
+      </div>
+
+      <div class="bg-slate-800 border border-slate-700 rounded-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Order</th>
+                <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider hidden sm:table-cell">Customer</th>
+                <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider hidden md:table-cell">Date</th>
+                <th class="text-center px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Status</th>
+                <th class="text-right px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Total</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody">
+              <tr><td colspan="5" class="px-4 py-8 text-center text-slate-600">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ SETTINGS ══════════════════ -->
+    <section id="tab-settings" class="tab-section">
+      <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight">Store Settings</h1>
+        <p class="text-slate-500 text-sm mt-0.5">Update your business information</p>
+      </div>
+
+      <div class="max-w-2xl bg-slate-800 border border-slate-700 rounded-sm p-6">
+        <div id="settings-error-banner" class="hidden mb-4 flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-sm">
+          <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+          <span id="settings-error-text"></span>
+        </div>
+
+        <form id="settings-form" novalidate>
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Business Name</label>
+              <input id="set-business-name" type="text" class="input-field" placeholder="KHARAT" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Established Year</label>
+              <input id="set-established" type="text" class="input-field" placeholder="1999" />
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Tagline</label>
+            <input id="set-tagline" type="text" class="input-field" placeholder="Engineered for Precision" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Description</label>
+            <textarea id="set-description" rows="3" class="input-field" placeholder="Business description…"></textarea>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Phone</label>
+              <input id="set-phone" type="text" class="input-field" placeholder="+92 21 3456789" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Email</label>
+              <input id="set-email" type="email" class="input-field" placeholder="info@kharat.pk" />
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Location</label>
+            <input id="set-location" type="text" class="input-field" placeholder="SITE Area, Karachi, Pakistan" />
+          </div>
+          <div class="mb-6">
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Working Hours</label>
+            <input id="set-hours" type="text" class="input-field" placeholder="Mon–Sat 9:00 AM – 6:00 PM" />
+          </div>
+          <button type="submit" id="settings-save-btn"
+            class="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-2.5 rounded-sm text-sm transition-colors">
+            <i data-lucide="save" class="w-4 h-4" id="settings-save-icon"></i>
+            <span id="settings-save-text">Save Settings</span>
+            <svg id="settings-spinner" class="hidden animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ══════════════════ USERS ══════════════════ -->
+    <section id="tab-users" class="tab-section">
+      <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight">Users</h1>
+        <p class="text-slate-500 text-sm mt-0.5">Manage user accounts and permissions</p>
+      </div>
+
+      <div class="bg-slate-800 border border-slate-700 rounded-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">User</th>
+                <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider hidden sm:table-cell">Email</th>
+                <th class="text-center px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Role</th>
+                <th class="text-right px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="4" class="px-4 py-8 text-center text-slate-600">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══════════════════ PRODUCT MODAL ══════════════════ -->
+<div id="product-modal" class="modal-overlay hidden">
+  <div class="modal-box mx-4">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+      <h2 id="modal-title" class="font-bold text-slate-100 text-base">Add Product</h2>
+      <button onclick="closeProductModal()" class="text-slate-500 hover:text-slate-300 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="px-6 py-5">
+      <div id="modal-error" class="hidden mb-4 bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-sm"></div>
+      <form id="product-form" novalidate>
+        <input type="hidden" id="product-edit-id" value="" />
+        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Name *</label>
+            <input id="prod-name" type="text" class="input-field" placeholder="Product name" required />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Category</label>
+            <select id="prod-category" class="input-field">
+              <option value="Tooling">Tooling</option>
+              <option value="Measuring">Measuring</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Fasteners">Fasteners</option>
+              <option value="Safety">Safety</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Description</label>
+          <textarea id="prod-description" rows="3" class="input-field" placeholder="Product description…"></textarea>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Price (PKR) *</label>
+            <input id="prod-price" type="number" min="0" step="0.01" class="input-field" placeholder="0.00" required />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Stock Quantity</label>
+            <input id="prod-stock" type="number" min="0" class="input-field" placeholder="0" />
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Image URL</label>
+          <input id="prod-image" type="url" class="input-field" placeholder="https://example.com/image.jpg" />
+        </div>
+        <div class="mb-5 flex items-center gap-2">
+          <input id="prod-active" type="checkbox" checked class="w-4 h-4 accent-amber-500 rounded" />
+          <label for="prod-active" class="text-sm text-slate-300 font-medium">Product is active (visible in store)</label>
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" id="product-save-btn"
+            class="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-2.5 rounded-sm text-sm transition-colors">
+            <span id="product-save-text">Save Product</span>
+            <svg id="product-spinner" class="hidden animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+          <button type="button" onclick="closeProductModal()" class="px-5 py-2.5 border border-slate-600 hover:border-slate-500 text-slate-300 font-medium rounded-sm text-sm transition-colors">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  // ── Auth Guard ────────────────────────────────────────────────
+  var token = getToken();
+  var user = getUser();
+  if (!token || !user || !user.is_admin) {
+    window.location.href = "index.html";
+  }
+
+  document.getElementById("admin-name").textContent = user ? (user.full_name || user.email) : "";
+  document.getElementById("logout-btn").addEventListener("click", function() {
+    clearAuth();
+    window.location.href = "index.html";
+  });
+
+  // ── Tab Navigation ────────────────────────────────────────────
+  var currentTab = "dashboard";
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll(".tab-section").forEach(function(el) {
+      el.classList.remove("active");
+    });
+    document.getElementById("tab-" + tab).classList.add("active");
+
+    document.querySelectorAll(".sidebar-link").forEach(function(btn) {
+      btn.classList.remove("active");
+    });
+    document.querySelectorAll(".sidebar-link").forEach(function(btn) {
+      if (btn.getAttribute("onclick") === "switchTab('" + tab + "')") {
+        btn.classList.add("active");
+      }
+    });
+
+    // Load data on tab switch
+    if (tab === "dashboard") loadDashboard();
+    if (tab === "products") loadProducts();
+    if (tab === "orders") loadAdminOrders();
+    if (tab === "settings") loadSettings();
+    if (tab === "users") loadUsers();
+  }
+
+  // ── Dashboard ─────────────────────────────────────────────────
+  function loadDashboard() {
+    Promise.all([
+      apiFetch("/api/products").then(function(r){ return r.json(); }),
+      apiFetch("/api/orders").then(function(r){ return r.json(); })
+    ]).then(function(results) {
+      var products = Array.isArray(results[0]) ? results[0] : (results[0].products || []);
+      var orders = Array.isArray(results[1]) ? results[1] : (results[1].orders || []);
+
+      document.getElementById("stat-total-products").textContent = products.length;
+      document.getElementById("stat-total-orders").textContent = orders.length;
+
+      var revenue = orders
+        .filter(function(o){ return (o.status || "").toLowerCase() === "delivered"; })
+        .reduce(function(sum, o){ return sum + (o.total_amount || o.total || 0); }, 0);
+      document.getElementById("stat-revenue").textContent = formatCurrency(revenue);
+
+      var pending = orders.filter(function(o){ return (o.status || "").toLowerCase() === "pending"; }).length;
+      document.getElementById("stat-pending").textContent = pending;
+
+      // Recent orders (last 5)
+      var recent = orders.slice(0, 5);
+      var tbody = document.getElementById("recent-orders-body");
+      if (recent.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-5 py-6 text-center text-slate-600 text-xs">No orders yet</td></tr>';
+        return;
+      }
+      tbody.innerHTML = recent.map(function(o) {
+        return '<tr class="border-b border-slate-700/50 last:border-0">' +
+          '<td class="px-5 py-3 font-mono text-amber-400 font-semibold">#' + (o.id || o.order_id) + '</td>' +
+          '<td class="px-5 py-3 text-slate-300 hidden sm:table-cell">' + (o.user_name || o.customer_name || "Customer") + '</td>' +
+          '<td class="px-5 py-3 text-center"><span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-sm ' + getStatusColor(o.status) + '">' + (o.status || 'pending') + '</span></td>' +
+          '<td class="px-5 py-3 text-right text-amber-400 font-semibold">' + formatCurrency(o.total_amount || o.total || 0) + '</td>' +
+        '</tr>';
+      }).join("");
+      lucide.createIcons();
+    }).catch(function(){});
+  }
+
+  // ── Products ─────────────────────────────────────────────────
+  var allAdminProducts = [];
+
+  function loadProducts() {
+    apiFetch("/api/products")
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        allAdminProducts = Array.isArray(data) ? data : (data.products || []);
+        renderProductsTable();
+      })
+      .catch(function(){
+        document.getElementById("products-tbody").innerHTML =
+          '<tr><td colspan="6" class="px-4 py-6 text-center text-red-400 text-sm">Failed to load products</td></tr>';
+      });
+  }
+
+  function renderProductsTable() {
+    var tbody = document.getElementById("products-tbody");
+    if (allAdminProducts.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-600">No products found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = allAdminProducts.map(function(p) {
+      return '<tr class="border-b border-slate-700/50 last:border-0 transition-colors">' +
+        '<td class="px-4 py-3">' +
+          '<div class="flex items-center gap-3">' +
+            (p.image_url
+              ? '<img src="' + p.image_url + '" class="w-8 h-8 object-cover rounded-sm bg-slate-700 flex-shrink-0" onerror="this.style.display=\'none\'"/>'
+              : '<div class="w-8 h-8 bg-slate-700 rounded-sm flex items-center justify-center flex-shrink-0"><i data-lucide="package" class="w-3.5 h-3.5 text-slate-500"></i></div>') +
+            '<span class="font-medium text-slate-200 text-sm">' + p.name + '</span>' +
+          '</div>' +
+        '</td>' +
+        '<td class="px-4 py-3 text-slate-400 text-sm hidden md:table-cell">' + (p.category || '—') + '</td>' +
+        '<td class="px-4 py-3 text-right text-amber-400 font-semibold text-sm">' + formatCurrency(p.price) + '</td>' +
+        '<td class="px-4 py-3 text-center hidden sm:table-cell">' +
+          '<span class="text-sm ' + (p.stock_quantity > 0 ? 'text-green-400' : 'text-red-400') + ' font-medium">' + (p.stock_quantity || 0) + '</span>' +
+        '</td>' +
+        '<td class="px-4 py-3 text-center">' +
+          '<span class="inline-flex px-1.5 py-0.5 text-xs rounded-sm font-semibold ' + (p.is_active !== false ? 'bg-green-500/20 text-green-400' : 'bg-slate-600/40 text-slate-400') + '">' +
+            (p.is_active !== false ? 'Yes' : 'No') +
+          '</span>' +
+        '</td>' +
+        '<td class="px-4 py-3 text-right">' +
+          '<div class="flex items-center justify-end gap-1">' +
+            '<button onclick=\'openProductModal(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\' class="p-1.5 text-slate-400 hover:text-amber-400 transition-colors rounded-sm">' +
+              '<i data-lucide="edit-2" class="w-3.5 h-3.5"></i>' +
+            '</button>' +
+            '<button onclick="deleteProduct(' + p.id + ', \'' + p.name.replace(/'/g, "\\'") + '\')" class="p-1.5 text-slate-400 hover:text-red-400 transition-colors rounded-sm">' +
+              '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>' +
+            '</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join("");
+    lucide.createIcons();
+  }
+
+  function openProductModal(product) {
+    document.getElementById("product-modal").classList.remove("hidden");
+    document.getElementById("modal-error").classList.add("hidden");
+    document.getElementById("modal-error").textContent = "";
+
+    if (product) {
+      document.getElementById("modal-title").textContent = "Edit Product";
+      document.getElementById("product-edit-id").value = product.id;
+      document.getElementById("prod-name").value = product.name || "";
+      document.getElementById("prod-category").value = product.category || "Tooling";
+      document.getElementById("prod-description").value = product.description || "";
+      document.getElementById("prod-price").value = product.price || "";
+      document.getElementById("prod-stock").value = product.stock_quantity || 0;
+      document.getElementById("prod-image").value = product.image_url || "";
+      document.getElementById("prod-active").checked = product.is_active !== false;
+    } else {
+      document.getElementById("modal-title").textContent = "Add New Product";
+      document.getElementById("product-edit-id").value = "";
+      document.getElementById("product-form").reset();
+      document.getElementById("prod-active").checked = true;
+    }
+    lucide.createIcons();
+  }
+
+  function closeProductModal() {
+    document.getElementById("product-modal").classList.add("hidden");
+  }
+
+  // Close modal on overlay click
+  document.getElementById("product-modal").addEventListener("click", function(e) {
+    if (e.target === this) closeProductModal();
+  });
+
+  document.getElementById("product-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    var id = document.getElementById("product-edit-id").value;
+    var name = document.getElementById("prod-name").value.trim();
+    var price = parseFloat(document.getElementById("prod-price").value);
+
+    document.getElementById("modal-error").classList.add("hidden");
+    if (!name) { document.getElementById("modal-error").textContent = "Product name is required"; document.getElementById("modal-error").classList.remove("hidden"); return; }
+    if (isNaN(price) || price < 0) { document.getElementById("modal-error").textContent = "Enter a valid price"; document.getElementById("modal-error").classList.remove("hidden"); return; }
+
+    var payload = {
+      name: name,
+      category: document.getElementById("prod-category").value,
+      description: document.getElementById("prod-description").value.trim(),
+      price: price,
+      stock_quantity: parseInt(document.getElementById("prod-stock").value) || 0,
+      image_url: document.getElementById("prod-image").value.trim(),
+      is_active: document.getElementById("prod-active").checked
+    };
+
+    document.getElementById("product-save-btn").disabled = true;
+    document.getElementById("product-save-text").textContent = "Saving…";
+    document.getElementById("product-spinner").classList.remove("hidden");
+
+    var method = id ? "PUT" : "POST";
+    var path = id ? "/api/products/" + id : "/api/products";
+
+    apiFetch(path, { method: method, body: payload })
+      .then(function(r) {
+        return r.json().then(function(data){ return { ok: r.ok, data: data }; });
+      })
+      .then(function(result) {
+        if (!result.ok) throw new Error(result.data.detail || result.data.message || "Failed to save product");
+        closeProductModal();
+        showToast(id ? "Product updated!" : "Product added!", "success");
+        loadProducts();
+      })
+      .catch(function(err) {
+        document.getElementById("modal-error").textContent = err.message;
+        document.getElementById("modal-error").classList.remove("hidden");
+      })
+      .finally(function() {
+        document.getElementById("product-save-btn").disabled = false;
+        document.getElementById("product-save-text").textContent = "Save Product";
+        document.getElementById("product-spinner").classList.add("hidden");
+      });
+  });
+
+  function deleteProduct(id, name) {
+    if (!confirm("Delete \"" + name + "\"? This cannot be undone.")) return;
+    apiFetch("/api/products/" + id, { method: "DELETE" })
+      .then(function(r) {
+        if (!r.ok) throw new Error("Failed to delete");
+        showToast("Product deleted", "info");
+        loadProducts();
+      })
+      .catch(function() {
+        showToast("Failed to delete product", "error");
+      });
+  }
+
+  // ── Orders ────────────────────────────────────────────────────
+  function loadAdminOrders() {
+    apiFetch("/api/orders")
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var orders = Array.isArray(data) ? data : (data.orders || []);
+        renderAdminOrders(orders);
+      })
+      .catch(function(){
+        document.getElementById("admin-orders-tbody").innerHTML =
+          '<tr><td colspan="5" class="px-4 py-6 text-center text-red-400 text-sm">Failed to load orders</td></tr>';
+      });
+  }
+
+  function renderAdminOrders(orders) {
+    var tbody = document.getElementById("admin-orders-tbody");
+    if (orders.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-600">No orders found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = orders.map(function(o) {
+      var statusOptions = ["pending","confirmed","processing","shipped","delivered","cancelled"];
+      var selectHtml = '<select onchange="updateOrderStatus(' + (o.id || o.order_id) + ', this.value)" ' +
+        'class="bg-slate-900 border border-slate-700 text-slate-200 text-xs px-2 py-1 rounded-sm focus:outline-none focus:border-amber-500 cursor-pointer">';
+      statusOptions.forEach(function(s) {
+        selectHtml += '<option value="' + s + '"' + ((o.status || "pending") === s ? " selected" : "") + '>' +
+          s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+      });
+      selectHtml += '</select>';
+
+      return '<tr class="border-b border-slate-700/50 last:border-0 transition-colors">' +
+        '<td class="px-4 py-3 font-mono text-amber-400 font-semibold text-sm">#' + (o.id || o.order_id) + '</td>' +
+        '<td class="px-4 py-3 text-slate-300 text-sm hidden sm:table-cell">' + (o.user_name || o.customer_name || "—") + '</td>' +
+        '<td class="px-4 py-3 text-slate-500 text-xs hidden md:table-cell">' + formatDate(o.created_at || o.date) + '</td>' +
+        '<td class="px-4 py-3 text-center">' + selectHtml + '</td>' +
+        '<td class="px-4 py-3 text-right text-amber-400 font-semibold text-sm">' + formatCurrency(o.total_amount || o.total || 0) + '</td>' +
+      '</tr>';
+    }).join("");
+    lucide.createIcons();
+  }
+
+  function updateOrderStatus(orderId, status) {
+    apiFetch("/api/orders/" + orderId + "/status", {
+      method: "PATCH",
+      body: { status: status }
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error("Failed");
+      showToast("Order #" + orderId + " status updated to " + status, "success");
+    })
+    .catch(function() {
+      showToast("Failed to update order status", "error");
+    });
+  }
+
+  // ── Settings ─────────────────────────────────────────────────
+  function loadSettings() {
+    apiFetch("/api/settings")
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var s = data.settings || data;
+        if (s.business_name) document.getElementById("set-business-name").value = s.business_name;
+        if (s.tagline) document.getElementById("set-tagline").value = s.tagline;
+        if (s.description) document.getElementById("set-description").value = s.description;
+        if (s.phone) document.getElementById("set-phone").value = s.phone;
+        if (s.email) document.getElementById("set-email").value = s.email;
+        if (s.location) document.getElementById("set-location").value = s.location;
+        if (s.working_hours) document.getElementById("set-hours").value = s.working_hours;
+        if (s.established) document.getElementById("set-established").value = s.established;
+      })
+      .catch(function(){});
+  }
+
+  document.getElementById("settings-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    document.getElementById("settings-error-banner").classList.add("hidden");
+    document.getElementById("settings-save-btn").disabled = true;
+    document.getElementById("settings-save-text").textContent = "Saving…";
+    document.getElementById("settings-save-icon").classList.add("hidden");
+    document.getElementById("settings-spinner").classList.remove("hidden");
+
+    var payload = {
+      business_name: document.getElementById("set-business-name").value.trim(),
+      tagline: document.getElementById("set-tagline").value.trim(),
+      description: document.getElementById("set-description").value.trim(),
+      phone: document.getElementById("set-phone").value.trim(),
+      email: document.getElementById("set-email").value.trim(),
+      location: document.getElementById("set-location").value.trim(),
+      working_hours: document.getElementById("set-hours").value.trim(),
+      established: document.getElementById("set-established").value.trim()
+    };
+
+    apiFetch("/api/settings", { method: "POST", body: payload })
+      .then(function(r) {
+        return r.json().then(function(data){ return { ok: r.ok, data: data }; });
+      })
+      .then(function(result) {
+        if (!result.ok) throw new Error(result.data.detail || result.data.message || "Failed to save settings");
+        showToast("Settings saved successfully!", "success");
+      })
+      .catch(function(err) {
+        document.getElementById("settings-error-text").textContent = err.message;
+        document.getElementById("settings-error-banner").classList.remove("hidden");
+      })
+      .finally(function() {
+        document.getElementById("settings-save-btn").disabled = false;
+        document.getElementById("settings-save-text").textContent = "Save Settings";
+        document.getElementById("settings-save-icon").classList.remove("hidden");
+        document.getElementById("settings-spinner").classList.add("hidden");
+      });
+  });
+
+  // ── Users ─────────────────────────────────────────────────────
+  function loadUsers() {
+    apiFetch("/api/users")
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var users = Array.isArray(data) ? data : (data.users || []);
+        renderUsers(users);
+      })
+      .catch(function(){
+        document.getElementById("users-tbody").innerHTML =
+          '<tr><td colspan="4" class="px-4 py-6 text-center text-red-400 text-sm">Failed to load users</td></tr>';
+      });
+  }
+
+  function renderUsers(users) {
+    var tbody = document.getElementById("users-tbody");
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-600">No users found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(function(u) {
+      return '<tr class="border-b border-slate-700/50 last:border-0 transition-colors">' +
+        '<td class="px-4 py-3">' +
+          '<div class="flex items-center gap-3">' +
+            '<div class="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold flex-shrink-0">' +
+              ((u.full_name || u.email || "U").charAt(0).toUpperCase()) +
+            '</div>' +
+            '<span class="font-medium text-slate-200 text-sm">' + (u.full_name || "—") + '</span>' +
+          '</div>' +
+        '</td>' +
+        '<td class="px-4 py-3 text-slate-400 text-sm hidden sm:table-cell">' + (u.email || "—") + '</td>' +
+        '<td class="px-4 py-3 text-center">' +
+          '<span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-sm ' + (u.is_admin ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-700/60 text-slate-400') + '">' +
+            (u.is_admin ? 'Admin' : 'User') +
+          '</span>' +
+        '</td>' +
+        '<td class="px-4 py-3 text-right">' +
+          '<button onclick="toggleAdmin(' + u.id + ', ' + (!u.is_admin) + ')" ' +
+            'class="text-xs px-3 py-1.5 rounded-sm font-semibold transition-colors border ' +
+            (u.is_admin
+              ? 'border-slate-600 text-slate-400 hover:border-red-500/60 hover:text-red-400'
+              : 'border-slate-600 text-slate-400 hover:border-amber-500/60 hover:text-amber-400') +
+            '">' +
+            (u.is_admin ? 'Remove Admin' : 'Make Admin') +
+          '</button>' +
+        '</td>' +
+      '</tr>';
+    }).join("");
+    lucide.createIcons();
+  }
+
+  function toggleAdmin(userId, makeAdmin) {
+    apiFetch("/api/users/" + userId, {
+      method: "PATCH",
+      body: { is_admin: makeAdmin }
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error("Failed");
+      showToast("User role updated", "success");
+      loadUsers();
+    })
+    .catch(function() {
+      showToast("Failed to update user role", "error");
+    });
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+  loadDashboard();
+  lucide.createIcons();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders — KHARAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+    .skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius:2px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:#f59e0b; transition:width 0.2s; }
+    .nav-link:hover::after { width:100%; }
+    ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:#0f172a; } ::-webkit-scrollbar-thumb { background:#334155; }
+    .order-row.expanded .chevron { transform: rotate(180deg); }
+    .chevron { transition: transform 0.2s ease; }
+    .order-details { display: none; }
+    .order-row.expanded + .order-details { display: table-row; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+<!-- NAVBAR -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-700/60">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a href="index.html" class="flex items-center gap-2 text-amber-400 font-bold text-xl tracking-wider">
+        <i data-lucide="settings" class="w-6 h-6"></i><span>KHARAT</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="index.html" class="nav-link relative text-slate-300 hover:text-amber-400 text-sm font-medium transition-colors">Home</a>
+        <a href="index.html#products" class="nav-link relative text-slate-300 hover:text-amber-400 text-sm font-medium transition-colors">Products</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="cart.html" class="relative p-2 text-slate-300 hover:text-amber-400 transition-colors">
+          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+          <span class="cart-badge absolute -top-0.5 -right-0.5 bg-amber-500 text-slate-900 text-xs font-bold rounded-full w-4 h-4 items-center justify-center hidden"></span>
+        </a>
+        <div id="nav-guest" class="hidden items-center gap-2">
+          <a href="login.html" class="text-sm text-slate-300 hover:text-amber-400 px-3 py-1.5 font-medium">Login</a>
+          <a href="signup.html" class="text-sm bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold px-3 py-1.5 rounded-sm">Sign Up</a>
+        </div>
+        <div id="nav-user" class="hidden items-center gap-3 relative">
+          <div class="relative group">
+            <button class="flex items-center gap-2 text-sm text-slate-300 hover:text-amber-400 font-medium">
+              <i data-lucide="user-circle" class="w-5 h-5"></i>
+              <span id="nav-username"></span>
+              <i data-lucide="chevron-down" class="w-3 h-3"></i>
+            </button>
+            <div class="absolute right-0 top-full mt-2 w-44 bg-slate-800 border border-slate-700 shadow-xl rounded-sm hidden group-hover:block">
+              <a href="orders.html" class="flex items-center gap-2 px-4 py-2.5 text-sm text-amber-400 hover:bg-slate-700"><i data-lucide="package" class="w-4 h-4"></i> My Orders</a>
+              <a id="nav-admin" href="admin.html" class="hidden flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:text-amber-400 hover:bg-slate-700"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Admin</a>
+              <hr class="border-slate-700 my-1"/>
+              <button id="logout-btn" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-slate-700"><i data-lucide="log-out" class="w-4 h-4"></i> Logout</button>
+            </div>
+          </div>
+        </div>
+        <button id="hamburger-btn" class="md:hidden p-2 text-slate-300 hover:text-amber-400">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-700/60 py-3 space-y-1">
+      <a href="index.html" class="block px-3 py-2 text-slate-300 hover:text-amber-400 text-sm">Home</a>
+      <a href="cart.html" class="block px-3 py-2 text-slate-300 hover:text-amber-400 text-sm">Cart</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="pt-24 pb-20 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-slate-100 tracking-tight">My Orders</h1>
+      <p class="text-slate-500 text-sm mt-1">Your order history</p>
+    </div>
+    <a href="index.html#products" class="hidden sm:inline-flex items-center gap-2 border border-slate-600 hover:border-amber-500/60 text-slate-300 hover:text-amber-400 text-sm font-medium px-4 py-2 rounded-sm transition-colors">
+      <i data-lucide="plus" class="w-4 h-4"></i> Shop More
+    </a>
+  </div>
+
+  <!-- Skeleton -->
+  <div id="orders-skeleton" class="space-y-3">
+    <div class="skeleton h-14"></div>
+    <div class="skeleton h-14"></div>
+    <div class="skeleton h-14"></div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="orders-empty" class="hidden text-center py-24">
+    <div class="w-20 h-20 border-2 border-dashed border-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+      <i data-lucide="package-open" class="w-9 h-9 text-slate-600"></i>
+    </div>
+    <h2 class="text-xl font-semibold text-slate-300 mb-2">No orders yet</h2>
+    <p class="text-slate-500 text-sm mb-6">When you place orders, they will appear here.</p>
+    <a href="index.html#products" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-2.5 rounded-sm text-sm transition-colors">
+      <i data-lucide="grid" class="w-4 h-4"></i> Browse Products
+    </a>
+  </div>
+
+  <!-- Error state -->
+  <div id="orders-error" class="hidden text-center py-20">
+    <i data-lucide="alert-circle" class="w-10 h-10 text-red-400 mx-auto mb-4"></i>
+    <p class="text-slate-300 mb-2 font-medium">Failed to load orders</p>
+    <button onclick="loadOrders()" class="text-sm text-amber-400 hover:text-amber-300 underline">Try again</button>
+  </div>
+
+  <!-- Orders table -->
+  <div id="orders-container" class="hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-sm overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-700 bg-slate-800/80">
+            <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Order</th>
+            <th class="text-left px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider hidden sm:table-cell">Date</th>
+            <th class="text-center px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Status</th>
+            <th class="text-right px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider hidden md:table-cell">Items</th>
+            <th class="text-right px-4 py-3 text-slate-400 font-semibold text-xs uppercase tracking-wider">Total</th>
+            <th class="px-4 py-3 w-10"></th>
+          </tr>
+        </thead>
+        <tbody id="orders-tbody">
+        </tbody>
+      </table>
+    </div>
+    <p class="text-slate-600 text-xs text-center mt-4">Click on any order row to expand order details</p>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-slate-900 border-t border-slate-800 py-8">
+  <div class="max-w-7xl mx-auto px-4 text-center text-slate-600 text-sm">
+    &copy; <span id="footer-year"></span> KHARAT. All rights reserved.
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  document.getElementById("footer-year").textContent = new Date().getFullYear();
+
+  // Auth guard
+  if (!getToken()) {
+    window.location.href = "login.html";
+  }
+
+  initNavbar();
+  loadOrders();
+
+  function loadOrders() {
+    document.getElementById("orders-skeleton").style.display = "block";
+    document.getElementById("orders-empty").classList.add("hidden");
+    document.getElementById("orders-error").classList.add("hidden");
+    document.getElementById("orders-container").classList.add("hidden");
+
+    apiFetch("/api/orders/my")
+      .then(function(r) {
+        if (r.status === 401) { clearAuth(); window.location.href = "login.html"; return; }
+        if (!r.ok) throw new Error("Failed");
+        return r.json();
+      })
+      .then(function(data) {
+        var orders = Array.isArray(data) ? data : (data.orders || []);
+        document.getElementById("orders-skeleton").style.display = "none";
+
+        if (orders.length === 0) {
+          document.getElementById("orders-empty").classList.remove("hidden");
+        } else {
+          renderOrders(orders);
+          document.getElementById("orders-container").classList.remove("hidden");
+        }
+      })
+      .catch(function() {
+        document.getElementById("orders-skeleton").style.display = "none";
+        document.getElementById("orders-error").classList.remove("hidden");
+      });
+  }
+
+  function renderOrders(orders) {
+    var tbody = document.getElementById("orders-tbody");
+    var html = "";
+
+    orders.forEach(function(order, idx) {
+      var items = order.items || order.order_items || [];
+      var itemCount = items.length;
+      var statusClass = getStatusColor(order.status);
+      var rowId = "order-row-" + idx;
+
+      html += '<tr class="order-row border-b border-slate-700/50 last:border-0 hover:bg-slate-700/20 cursor-pointer transition-colors" id="' + rowId + '" onclick="toggleOrder(\'' + rowId + '\')">' +
+        '<td class="px-4 py-4">' +
+          '<div class="font-mono text-amber-400 font-semibold text-sm">#' + (order.id || order.order_id) + '</div>' +
+          '<div class="text-xs text-slate-500 mt-0.5 sm:hidden">' + formatDate(order.created_at || order.date) + '</div>' +
+        '</td>' +
+        '<td class="px-4 py-4 text-slate-400 text-sm hidden sm:table-cell">' + formatDate(order.created_at || order.date) + '</td>' +
+        '<td class="px-4 py-4 text-center">' +
+          '<span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-sm ' + statusClass + '">' +
+            (order.status || "pending").charAt(0).toUpperCase() + (order.status || "pending").slice(1) +
+          '</span>' +
+        '</td>' +
+        '<td class="px-4 py-4 text-right text-slate-400 hidden md:table-cell">' + itemCount + ' item' + (itemCount !== 1 ? 's' : '') + '</td>' +
+        '<td class="px-4 py-4 text-right font-bold text-amber-400">' + formatCurrency(order.total_amount || order.total || 0) + '</td>' +
+        '<td class="px-4 py-4">' +
+          '<i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 chevron transition-transform"></i>' +
+        '</td>' +
+      '</tr>';
+
+      // Expandable details row
+      html += '<tr class="order-details bg-slate-900/50 border-b border-slate-700/50" id="details-' + rowId + '" style="display:none;">' +
+        '<td colspan="6" class="px-6 py-4">' +
+          '<div class="mb-3">' +
+            '<h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Order Items</h4>' +
+            '<div class="space-y-2">' +
+            (items.length > 0
+              ? items.map(function(item) {
+                  return '<div class="flex items-center justify-between py-1.5 border-b border-slate-800 last:border-0 text-sm">' +
+                    '<div class="flex items-center gap-3">' +
+                      (item.image_url || (item.product && item.product.image_url)
+                        ? '<img src="' + (item.image_url || item.product.image_url) + '" class="w-8 h-8 object-cover rounded-sm bg-slate-700"/>'
+                        : '<div class="w-8 h-8 bg-slate-800 rounded-sm flex items-center justify-center"><i data-lucide="package" class="w-4 h-4 text-slate-600"></i></div>') +
+                      '<span class="text-slate-200">' + (item.product_name || (item.product && item.product.name) || "Product #" + item.product_id) + '</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-6 text-right">' +
+                      '<span class="text-slate-500">x' + item.quantity + '</span>' +
+                      '<span class="text-amber-400 font-semibold w-24">' + formatCurrency((item.price || 0) * item.quantity) + '</span>' +
+                    '</div>' +
+                  '</div>';
+                }).join("")
+              : '<p class="text-slate-500 text-sm">No item details available.</p>') +
+            '</div>' +
+          '</div>' +
+          (order.shipping_address
+            ? '<div class="mt-3"><h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Shipping Address</h4>' +
+              '<p class="text-sm text-slate-300">' +
+                (order.shipping_address.full_name ? order.shipping_address.full_name + ', ' : '') +
+                (order.shipping_address.address_line_1 || '') +
+                (order.shipping_address.city ? ', ' + order.shipping_address.city : '') +
+                (order.shipping_address.country ? ', ' + order.shipping_address.country : '') +
+              '</p></div>'
+            : '') +
+        '</td>' +
+      '</tr>';
+    });
+
+    tbody.innerHTML = html;
+    lucide.createIcons();
+  }
+
+  function toggleOrder(rowId) {
+    var row = document.getElementById(rowId);
+    var detailsRow = document.getElementById("details-" + rowId);
+    var isExpanded = row.classList.contains("expanded");
+
+    // Close all
+    document.querySelectorAll(".order-row.expanded").forEach(function(r) {
+      r.classList.remove("expanded");
+    });
+    document.querySelectorAll(".order-details").forEach(function(r) {
+      r.style.display = "none";
+    });
+
+    if (!isExpanded) {
+      row.classList.add("expanded");
+      detailsRow.style.display = "table-row";
+    }
+  }
+
+  lucide.createIcons();
+</script>
+</body>
+</html>
+
